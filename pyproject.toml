@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "finanzas-personales-etl"
+version = "0.1.0"
+description = "ETL local, conservador e idempotente para extractos bancarios colombianos y Google Sheets"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "google-api-python-client>=2.175,<3",
+  "google-auth>=2.40,<3",
+  "pdfplumber>=0.11,<1",
+  "pypdf>=5,<7",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.4,<9",
+  "pytest-cov>=6.2,<7",
+]
+
+[project.scripts]
+finanzas-etl = "finance_etl.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]

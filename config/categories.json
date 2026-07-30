@@ -1,0 +1,55 @@
+{
+  "categories": [
+    {"category": "Ingresos", "subcategory": "Salario", "transaction_type": "Ingreso", "budgetable": false, "color": "#16A34A", "display_order": 10},
+    {"category": "Ingresos", "subcategory": "Honorarios", "transaction_type": "Ingreso", "budgetable": false, "color": "#16A34A", "display_order": 11},
+    {"category": "Ingresos", "subcategory": "Doctorado / beca", "transaction_type": "Ingreso", "budgetable": false, "color": "#16A34A", "display_order": 12},
+    {"category": "Ingresos", "subcategory": "Intereses bancarios", "transaction_type": "Ingreso", "budgetable": false, "color": "#16A34A", "display_order": 13},
+    {"category": "Ingresos", "subcategory": "Otros ingresos", "transaction_type": "Ingreso", "budgetable": false, "color": "#16A34A", "display_order": 14},
+
+    {"category": "Vivienda", "subcategory": "Hipoteca", "transaction_type": "Gasto", "budgetable": true, "color": "#2563EB", "display_order": 20},
+    {"category": "Vivienda", "subcategory": "Administración", "transaction_type": "Gasto", "budgetable": true, "color": "#2563EB", "display_order": 21},
+    {"category": "Vivienda", "subcategory": "Servicios públicos", "transaction_type": "Gasto", "budgetable": true, "color": "#2563EB", "display_order": 22},
+    {"category": "Vivienda", "subcategory": "Internet y telefonía", "transaction_type": "Gasto", "budgetable": true, "color": "#2563EB", "display_order": 23},
+    {"category": "Vivienda", "subcategory": "Mantenimiento", "transaction_type": "Gasto", "budgetable": true, "color": "#2563EB", "display_order": 24},
+    {"category": "Aportes al hogar", "subcategory": "Transferencia a Bancolombia de Laura", "transaction_type": "Gasto", "budgetable": true, "color": "#14B8A6", "display_order": 25},
+    {"category": "Aportes al hogar", "subcategory": "Financiación recibida", "transaction_type": "Transferencia", "budgetable": false, "color": "#14B8A6", "display_order": 26},
+
+    {"category": "Alimentación", "subcategory": "Supermercado", "transaction_type": "Gasto", "budgetable": true, "color": "#F97316", "display_order": 30},
+    {"category": "Alimentación", "subcategory": "Restaurantes", "transaction_type": "Gasto", "budgetable": true, "color": "#F97316", "display_order": 31},
+    {"category": "Alimentación", "subcategory": "Panadería y cafetería", "transaction_type": "Gasto", "budgetable": true, "color": "#F97316", "display_order": 32},
+    {"category": "Alimentación", "subcategory": "Desayunos y arepas", "transaction_type": "Gasto", "budgetable": true, "color": "#FB7185", "display_order": 33},
+    {"category": "Alimentación", "subcategory": "Almuerzos", "transaction_type": "Gasto", "budgetable": true, "color": "#FB7185", "display_order": 34},
+
+    {"category": "Transporte", "subcategory": "Combustible", "transaction_type": "Gasto", "budgetable": true, "color": "#EAB308", "display_order": 40},
+    {"category": "Transporte", "subcategory": "Parqueadero", "transaction_type": "Gasto", "budgetable": true, "color": "#EAB308", "display_order": 41},
+    {"category": "Transporte", "subcategory": "Mantenimiento de vehículo", "transaction_type": "Gasto", "budgetable": true, "color": "#EAB308", "display_order": 42},
+    {"category": "Transporte", "subcategory": "Transporte público", "transaction_type": "Gasto", "budgetable": true, "color": "#EAB308", "display_order": 43},
+
+    {"category": "Salud", "subcategory": "Farmacia", "transaction_type": "Gasto", "budgetable": true, "color": "#DC2626", "display_order": 50},
+    {"category": "Salud", "subcategory": "Medicina", "transaction_type": "Gasto", "budgetable": true, "color": "#DC2626", "display_order": 51},
+    {"category": "Salud", "subcategory": "Gimnasio y deporte", "transaction_type": "Gasto", "budgetable": true, "color": "#DC2626", "display_order": 52},
+
+    {"category": "Ocio", "subcategory": "Entretenimiento", "transaction_type": "Gasto", "budgetable": true, "color": "#A855F7", "display_order": 60},
+    {"category": "Ocio", "subcategory": "Viajes", "transaction_type": "Gasto", "budgetable": true, "color": "#A855F7", "display_order": 61},
+    {"category": "Ocio", "subcategory": "Compras personales", "transaction_type": "Gasto", "budgetable": true, "color": "#A855F7", "display_order": 62},
+
+    {"category": "Educación", "subcategory": "Matrículas y cursos", "transaction_type": "Gasto", "budgetable": true, "color": "#0891B2", "display_order": 70},
+    {"category": "Suscripciones", "subcategory": "Streaming", "transaction_type": "Gasto", "budgetable": true, "color": "#DB2777", "display_order": 80},
+    {"category": "Suscripciones", "subcategory": "Software", "transaction_type": "Gasto", "budgetable": true, "color": "#DB2777", "display_order": 81},
+    {"category": "Impuestos y comisiones", "subcategory": "Comisiones bancarias", "transaction_type": "Gasto", "budgetable": true, "color": "#64748B", "display_order": 90},
+    {"category": "Impuestos y comisiones", "subcategory": "Impuestos", "transaction_type": "Gasto", "budgetable": true, "color": "#64748B", "display_order": 91},
+
+    {"category": "Transferencias entre cuentas", "subcategory": "Cuenta propia", "transaction_type": "Transferencia", "budgetable": false, "color": "#0F766E", "display_order": 100},
+    {"category": "Transferencias a terceros", "subcategory": "Personas y billeteras", "transaction_type": "Gasto", "budgetable": true, "color": "#0EA5E9", "display_order": 101},
+    {"category": "Compras y pagos", "subcategory": "Comercio por identificar", "transaction_type": "Gasto", "budgetable": true, "color": "#F59E0B", "display_order": 102},
+    {"category": "Compras y pagos", "subcategory": "PSE por identificar", "transaction_type": "Gasto", "budgetable": true, "color": "#F59E0B", "display_order": 103},
+    {"category": "Compras y pagos", "subcategory": "Concepto por identificar", "transaction_type": "Gasto", "budgetable": true, "color": "#F59E0B", "display_order": 104},
+    {"category": "Entradas por identificar", "subcategory": "Origen por identificar", "transaction_type": "Ingreso", "budgetable": false, "color": "#22C55E", "display_order": 105},
+    {"category": "Inversiones", "subcategory": "CDT", "transaction_type": "Inversión", "budgetable": false, "color": "#4F46E5", "display_order": 110},
+    {"category": "Patrimonio", "subcategory": "Compra de vehículo", "transaction_type": "Inversión", "budgetable": false, "color": "#7A5AF8", "display_order": 111},
+    {"category": "Patrimonio", "subcategory": "Compra de vivienda", "transaction_type": "Inversión", "budgetable": false, "color": "#7A5AF8", "display_order": 112},
+    {"category": "Patrimonio", "subcategory": "Abono a deuda patrimonial", "transaction_type": "Inversión", "budgetable": false, "color": "#7A5AF8", "display_order": 113},
+    {"category": "Ajustes", "subcategory": "Reverso o corrección", "transaction_type": "Ajuste", "budgetable": false, "color": "#78716C", "display_order": 120},
+    {"category": "Revisión Manual", "subcategory": "Sin clasificar", "transaction_type": "Ajuste", "budgetable": false, "color": "#EF4444", "display_order": 999}
+  ]
+}

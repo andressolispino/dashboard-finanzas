@@ -1,0 +1,87 @@
+import type { DashboardData, Transaction } from './types'
+
+const tx = (
+  id: string,
+  date: string,
+  description: string,
+  amount: number,
+  category: string,
+  subcategory: string,
+  status = 'Autoaprobada',
+  recurring = false,
+): Transaction => ({
+  transaction_id: id,
+  transaction_date: date,
+  account_id: 'principal_cop',
+  source_institution: 'Davibank',
+  raw_description: description,
+  normalized_description: description,
+  merchant: description,
+  amount_cop: amount,
+  transaction_type: amount >= 0 ? 'Ingreso' : 'Gasto',
+  income_source: amount >= 0 ? description : '',
+  category,
+  subcategory,
+  is_internal_transfer: false,
+  is_recurring: recurring,
+  review_status: status,
+  review_reason: status === 'Pendiente' ? 'demo_pending' : '',
+})
+
+export const demoData: DashboardData = {
+  transactions: [
+    tx('d1', '2026-07-02', 'Ingreso principal', 7800000, 'Ingresos', 'Salario'),
+    tx('d2', '2026-07-05', 'Ingreso académico', 3200000, 'Ingresos', 'Honorarios'),
+    tx('d3', '2026-07-06', 'Hipoteca', -1700000, 'Vivienda', 'Hipoteca', 'Autoaprobada', true),
+    tx('d4', '2026-07-07', 'Mercado', -620000, 'Alimentación', 'Supermercado'),
+    tx('d5', '2026-07-09', 'Restaurante', -148000, 'Alimentación', 'Restaurantes'),
+    tx('d6', '2026-07-11', 'Servicios', -310000, 'Vivienda', 'Servicios públicos', 'Autoaprobada', true),
+    tx('d7', '2026-07-13', 'Gimnasio', -115000, 'Salud', 'Gimnasio y deporte', 'Autoaprobada', true),
+    tx('d8', '2026-07-15', 'Movimiento por revisar', -84000, 'Revisión Manual', 'Sin clasificar', 'Pendiente'),
+    tx('d9', '2026-06-02', 'Ingreso principal', 7600000, 'Ingresos', 'Salario'),
+    tx('d10', '2026-06-08', 'Vivienda', -2050000, 'Vivienda', 'Hipoteca'),
+    tx('d11', '2026-06-12', 'Alimentación', -910000, 'Alimentación', 'Supermercado'),
+    tx('d12', '2026-05-02', 'Ingreso principal', 7500000, 'Ingresos', 'Salario'),
+    tx('d13', '2026-05-18', 'Gastos del mes', -3650000, 'Ocio', 'Compras personales'),
+  ],
+  categories: [
+    { category: 'Ingresos', subcategory: 'Salario', transaction_type: 'Ingreso', budgetable: false, active: true, color: '#16A34A', display_order: 10 },
+    { category: 'Vivienda', subcategory: 'Hipoteca', transaction_type: 'Gasto', budgetable: true, active: true, color: '#2563EB', display_order: 20 },
+    { category: 'Alimentación', subcategory: 'Supermercado', transaction_type: 'Gasto', budgetable: true, active: true, color: '#F97316', display_order: 30 },
+    { category: 'Ocio', subcategory: 'Viajes', transaction_type: 'Gasto', budgetable: true, active: true, color: '#A855F7', display_order: 60 },
+    { category: 'Transferencias entre cuentas', subcategory: 'Cuenta propia', transaction_type: 'Transferencia', budgetable: false, active: true, color: '#0F766E', display_order: 100 },
+  ],
+  merchantRules: [],
+  budgets: [
+    { month: '2026-07', category: 'Alimentación', subcategory: '', limit_cop: 1100000 },
+    { month: '2026-07', category: 'Transporte', subcategory: '', limit_cop: 650000 },
+    { month: '2026-07', category: 'Ocio', subcategory: '', limit_cop: 500000 },
+    { month: '2026-07', category: 'Salud', subcategory: '', limit_cop: 400000 },
+  ],
+  subscriptions: [
+    { subscription_id: 's1', display_name: 'Software de productividad', category: 'Suscripciones', expected_amount_cop: 69000, frequency: 'Mensual', status: 'Activa', next_expected: '2026-08-03', active: true },
+    { subscription_id: 's2', display_name: 'Gimnasio', category: 'Salud', expected_amount_cop: 115000, frequency: 'Mensual', status: 'Activa', next_expected: '2026-08-13', active: true },
+  ],
+  assets: [
+    { asset_id: 'a1', display_name: 'CDT demostrativo', asset_type: 'CDT', principal: 12000000, annual_rate_ea: 0.105, start_date: '2026-01-15', maturity_date: '2027-01-15', current_value_override: 0, liability_balance: 0, monthly_payment_cop: 0, active: true },
+  ],
+  goals: [
+    { goal_id: 'g1', display_name: 'Viaje familiar', target_amount_cop: 8000000, current_amount_cop: 3400000, target_date: '2026-12-01', status: 'En curso' },
+    { goal_id: 'g2', display_name: 'Fondo de emergencia', target_amount_cop: 15000000, current_amount_cop: 9600000, target_date: '2027-04-01', status: 'En curso' },
+  ],
+  incomeSchedules: [],
+  reviewQueue: [],
+  accounts: [
+    {
+      account_id: 'principal_cop',
+      display_name: 'Davibank · Cuenta de ingresos',
+      owner: 'Usuario',
+      institution_canonical: 'Davibank',
+      account_type: 'Ahorros',
+      currency: 'COP',
+      active: true,
+    },
+  ],
+  etlRuns: [],
+  taxDocuments: [],
+}

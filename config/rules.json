@@ -1,0 +1,253 @@
+{
+  "rules": [
+    {
+      "rule_id": "interest_income",
+      "priority": 10,
+      "enabled": true,
+      "account_ids": ["principal_cop"],
+      "description_regex": "(ABONO INTERESES|PAGO DE INTERESES?|PAGO DE INTERES GENERADO)",
+      "direction": "Entrada",
+      "set": {
+        "transaction_type": "Ingreso",
+        "category": "Ingresos",
+        "subcategory": "Intereses bancarios",
+        "merchant": "Entidad bancaria",
+        "confidence": 0.99
+      }
+    },
+    {
+      "rule_id": "cdt_movement",
+      "priority": 20,
+      "enabled": true,
+      "description_regex": "CDT DIGITAL",
+      "set": {
+        "transaction_type": "Inversión",
+        "category": "Inversiones",
+        "subcategory": "CDT",
+        "merchant": "CDT",
+        "confidence": 0.99
+      }
+    },
+    {
+      "rule_id": "nequi_own_recharge",
+      "priority": 30,
+      "enabled": true,
+      "description_regex": "PAGO POR PSE.*RECARGA NEQUI",
+      "direction": "Salida",
+      "set": {
+        "transaction_type": "Transferencia",
+        "category": "Transferencias entre cuentas",
+        "subcategory": "Cuenta propia",
+        "counterparty_account_id": "nequi_cop",
+        "is_internal_transfer": true,
+        "confidence": 0.98
+      }
+    },
+    {
+      "rule_id": "bank_fees",
+      "priority": 40,
+      "enabled": true,
+      "description_regex": "(COBRO IVA|COBRO COMISION|CT MANEJO CTA|ACC PERSONALES)",
+      "direction": "Salida",
+      "set": {
+        "transaction_type": "Gasto",
+        "category": "Impuestos y comisiones",
+        "subcategory": "Comisiones bancarias",
+        "merchant": "Entidad bancaria",
+        "confidence": 0.96
+      }
+    },
+    {
+      "rule_id": "financial_transaction_tax",
+      "priority": 41,
+      "enabled": true,
+      "description_regex": "IMP/TRANS FINANC/ACUM",
+      "direction": "Salida",
+      "set": {
+        "transaction_type": "Gasto",
+        "category": "Impuestos y comisiones",
+        "subcategory": "Impuestos",
+        "merchant": "Entidad bancaria",
+        "confidence": 0.98
+      }
+    },
+    {
+      "rule_id": "supermarkets",
+      "priority": 100,
+      "enabled": true,
+      "description_regex": "(TIENDA D1|JUMBO|SUPERTIENDA OLIMPICA|EXITO)",
+      "direction": "Salida",
+      "set": {
+        "transaction_type": "Gasto",
+        "category": "Alimentación",
+        "subcategory": "Supermercado",
+        "confidence": 0.94
+      }
+    },
+    {
+      "rule_id": "bakery",
+      "priority": 110,
+      "enabled": true,
+      "description_regex": "(DELIPAN|PANIFICADORA|PANADERIA)",
+      "direction": "Salida",
+      "set": {
+        "transaction_type": "Gasto",
+        "category": "Alimentación",
+        "subcategory": "Panadería y cafetería",
+        "confidence": 0.94
+      }
+    },
+    {
+      "rule_id": "restaurant_generic",
+      "priority": 120,
+      "enabled": true,
+      "description_regex": "(RESTAURAN|SUBWAY|HAMBURGUESAS|SANDWICH)",
+      "direction": "Salida",
+      "set": {
+        "transaction_type": "Gasto",
+        "category": "Alimentación",
+        "subcategory": "Restaurantes",
+        "confidence": 0.92
+      }
+    },
+    {
+      "rule_id": "pharmacy",
+      "priority": 130,
+      "enabled": true,
+      "description_regex": "(DROGAS REBA|FARMAC)",
+      "direction": "Salida",
+      "set": {
+        "transaction_type": "Gasto",
+        "category": "Salud",
+        "subcategory": "Farmacia",
+        "confidence": 0.95
+      }
+    },
+    {
+      "rule_id": "gym",
+      "priority": 140,
+      "enabled": true,
+      "description_regex": "(SCULPTURE GYM|GIMNASIO)",
+      "direction": "Salida",
+      "set": {
+        "transaction_type": "Gasto",
+        "category": "Salud",
+        "subcategory": "Gimnasio y deporte",
+        "is_recurring": true,
+        "confidence": 0.96
+      }
+    },
+    {
+      "rule_id": "parking",
+      "priority": 150,
+      "enabled": true,
+      "description_regex": "PARQUEADERO",
+      "direction": "Salida",
+      "set": {
+        "transaction_type": "Gasto",
+        "category": "Transporte",
+        "subcategory": "Parqueadero",
+        "confidence": 0.94
+      }
+    },
+    {
+      "rule_id": "subscriptions_known",
+      "priority": 160,
+      "enabled": true,
+      "description_regex": "(NETFLIX|SPOTIFY|YOUTUBE PREMIUM|GOOGLE ONE|MICROSOFT 365|ADOBE)",
+      "direction": "Salida",
+      "set": {
+        "transaction_type": "Gasto",
+        "category": "Suscripciones",
+        "subcategory": "Streaming",
+        "is_recurring": true,
+        "confidence": 0.95
+      }
+    },
+    {
+      "rule_id": "third_party_transfers",
+      "priority": 800,
+      "enabled": true,
+      "description_regex": "^(TRANSFERENCIAS? A NEQUI|TRANSF(?:ERENCIA)?(?: QR)?(?: NEQUI)?(?: A)?\\s+|PARA |BREB |TRANS\\. ACH TFR TO-|TRANSFERENCIA CTA)",
+      "direction": "Salida",
+      "set": {
+        "transaction_type": "Gasto",
+        "category": "Transferencias a terceros",
+        "subcategory": "Personas y billeteras",
+        "confidence": 0.82
+      }
+    },
+    {
+      "rule_id": "qr_and_pos_unknown_merchant",
+      "priority": 810,
+      "enabled": true,
+      "description_regex": "^(PAGO QR|COMPRA POS|COMPRA EN)",
+      "direction": "Salida",
+      "set": {
+        "transaction_type": "Gasto",
+        "category": "Compras y pagos",
+        "subcategory": "Comercio por identificar",
+        "confidence": 0.78
+      }
+    },
+    {
+      "rule_id": "pse_unknown_payee",
+      "priority": 820,
+      "enabled": true,
+      "description_regex": "^(PAGO POR PSE|PAGO PSE)",
+      "direction": "Salida",
+      "set": {
+        "transaction_type": "Gasto",
+        "category": "Compras y pagos",
+        "subcategory": "PSE por identificar",
+        "confidence": 0.78
+      }
+    },
+    {
+      "rule_id": "incoming_transfer_unknown_source",
+      "priority": 830,
+      "enabled": true,
+      "account_ids": ["principal_cop"],
+      "description_regex": "^(CREDITO RECIBIDO ACH|TRANSF DE |RECIBIDO DE )",
+      "direction": "Entrada",
+      "set": {
+        "transaction_type": "Ingreso",
+        "category": "Entradas por identificar",
+        "subcategory": "Origen por identificar",
+        "confidence": 0.75
+      }
+    },
+    {
+      "rule_id": "fixed_internal_transfer_template",
+      "priority": 5,
+      "enabled": false,
+      "account_ids": ["principal_cop"],
+      "description_regex": "REEMPLAZAR_CON_LA_DESCRIPCION_REAL_DEL_DESTINO",
+      "direction": "Salida",
+      "amount_equals": -250000,
+      "set": {
+        "transaction_type": "Transferencia",
+        "category": "Transferencias entre cuentas",
+        "subcategory": "Cuenta propia",
+        "counterparty_account_id": "bancolombia_cop",
+        "is_internal_transfer": true,
+        "confidence": 0.99
+      }
+    },
+    {
+      "rule_id": "mortgage_template",
+      "priority": 6,
+      "enabled": false,
+      "description_regex": "REEMPLAZAR_CON_LA_DESCRIPCION_REAL_DE_LA_HIPOTECA",
+      "direction": "Salida",
+      "amount_equals": -1800000,
+      "set": {
+        "transaction_type": "Gasto",
+        "category": "Vivienda",
+        "subcategory": "Hipoteca",
+        "is_recurring": true,
+        "confidence": 0.99
+      }
+    }
+  ]
+}

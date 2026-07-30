@@ -1,0 +1,74 @@
+{
+  "accounts": [
+    {
+      "account_id": "principal_cop",
+      "display_name": "Davibank · Cuenta de ingresos",
+      "owner": "Titular",
+      "institution_canonical": "Davibank",
+      "account_type": "Ahorros",
+      "currency": "COP",
+      "is_internal": true,
+      "include_net_worth": true,
+      "active": true,
+      "match": {
+        "institutions": [
+          "Scotiabank Colpatria",
+          "DaviBank",
+          "Davivienda"
+        ],
+        "account_number_last4": "REEMPLAZAR"
+      }
+    },
+    {
+      "account_id": "bancolombia_cop",
+      "display_name": "Bancolombia",
+      "owner": "Titular o esposa",
+      "institution_canonical": "Bancolombia",
+      "account_type": "Ahorros",
+      "currency": "COP",
+      "is_internal": true,
+      "include_net_worth": true,
+      "active": true,
+      "match": {
+        "institutions": [
+          "Bancolombia"
+        ],
+        "account_number_last4": "REEMPLAZAR"
+      }
+    },
+    {
+      "account_id": "nequi_cop",
+      "display_name": "Nequi",
+      "owner": "Titular",
+      "institution_canonical": "Nequi",
+      "account_type": "Depósito de bajo monto",
+      "currency": "COP",
+      "is_internal": true,
+      "include_net_worth": true,
+      "active": true,
+      "match": {
+        "institutions": [
+          "Nequi"
+        ],
+        "account_number_last4": "REEMPLAZAR"
+      }
+    },
+    {
+      "account_id": "falabella_multi",
+      "display_name": "Banco Falabella",
+      "owner": "Titular",
+      "institution_canonical": "Banco Falabella",
+      "account_type": "Ahorros multidivisa",
+      "currency": "MULTI",
+      "is_internal": true,
+      "include_net_worth": true,
+      "active": true,
+      "match": {
+        "institutions": [
+          "Banco Falabella"
+        ],
+        "account_number_last4": "REEMPLAZAR"
+      }
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+# Credenciales y configuración privada
+.env
+.credentials/
+credentials*.json
+service-account*.json
+config/accounts.local.json
+config/rules.local.json
+config/income_schedules.local.json
+config/review_decisions.local.json
+config/transaction_overrides.local.json
+config/assets.local.json
+config/fixed_expenses.local.json
+
+# Extractos y datos financieros
+*.pdf
+*.xlsx
+data/
+output/
+dry_run*.csv
+index.html
+github-pages-safe/
+
+# Temporales y Python
+tmp/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# IDE / sistema
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
