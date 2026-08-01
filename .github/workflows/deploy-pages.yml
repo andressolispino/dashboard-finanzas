@@ -5,9 +5,6 @@ name: Deploy dashboard to GitHub Pages
 on:
   push:
     branches: [main]
-    paths:
-      - "web/**"
-      - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
 permissions:
@@ -26,8 +23,8 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
@@ -39,7 +36,7 @@ jobs:
           VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
           VITE_GOOGLE_SPREADSHEET_ID: ${{ vars.VITE_GOOGLE_SPREADSHEET_ID }}
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: web/dist
   deploy:
