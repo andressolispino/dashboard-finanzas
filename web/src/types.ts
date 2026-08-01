@@ -62,6 +62,26 @@ export interface MerchantRule extends SheetRow {
   notes: string
 }
 
+export interface ClassificationRule extends SheetRow {
+  rule_id: string
+  priority: number
+  enabled: boolean
+  account_ids: string
+  description_regex: string
+  direction: string
+  amount_equals?: number
+  transaction_type: string
+  income_source: string
+  category: string
+  subcategory: string
+  merchant: string
+  counterparty_account_id: string
+  is_internal_transfer: boolean
+  is_recurring: boolean
+  confidence: number
+  notes: string
+}
+
 export interface Budget extends SheetRow {
   month: string
   owner_scope?: string
@@ -165,6 +185,7 @@ export interface DashboardData {
   transactions: Transaction[]
   categories: CategoryDefinition[]
   merchantRules: MerchantRule[]
+  classificationRules: ClassificationRule[]
   budgets: Budget[]
   subscriptions: Subscription[]
   assets: Asset[]

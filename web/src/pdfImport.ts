@@ -1,4 +1,8 @@
-import type { MerchantRule, Transaction } from './types'
+import type {
+  ClassificationRule,
+  MerchantRule,
+  Transaction,
+} from './types'
 
 const PDFJS_URL =
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs'
@@ -276,6 +280,7 @@ function classification(
   descriptionValue: string,
   amount: number,
   learnedRules: MerchantRule[],
+  classificationRules: ClassificationRule[],
 ) {
   const description = normalize(descriptionValue)
   const output = {
@@ -303,6 +308,48 @@ function classification(
     output.is_internal_transfer = accountId !== 'bancolombia_cop'
     output.confidence = 0.99
     output.review_status = 'Autoaprobada'
+    return output
+  }
+  const confirmedRule = [...classificationRules]
+    .filter((rule) => rule.enabled !== false && rule.description_regex)
+    .sort((left, right) => left.priority - right.priority)
+    .find((rule) => {
+      const accounts = rule.account_ids
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean)
+      if (accounts.length && !accounts.includes(accountId)) return false
+      const direction = normalize(rule.direction)
+      if (direction === 'SALIDA' && amount >= 0) return false
+      if (direction === 'ENTRADA' && amount <= 0) return false
+      if (
+        rule.amount_equals != null &&
+        Math.abs(amount - rule.amount_equals) > 0.01
+      ) return false
+      try {
+        return new RegExp(rule.description_regex, 'i').test(description)
+      } catch {
+        return false
+      }
+    })
+  if (confirmedRule) {
+    Object.assign(output, {
+      transaction_type: confirmedRule.transaction_type ||
+        output.transaction_type,
+      income_source: confirmedRule.income_source || '',
+      category: confirmedRule.category || output.category,
+      subcategory: confirmedRule.subcategory || output.subcategory,
+      merchant: confirmedRule.merchant || output.merchant,
+      counterparty_account_id:
+        confirmedRule.counterparty_account_id || '',
+      is_internal_transfer: confirmedRule.is_internal_transfer,
+      is_recurring: confirmedRule.is_recurring,
+      confidence: confirmedRule.confidence || 0.98,
+      review_status: confirmedRule.category === 'Revisión Manual'
+        ? 'Pendiente'
+        : 'Autoaprobada',
+      review_reason: `dashboard:confirmed:${confirmedRule.rule_id}`,
+    })
     return output
   }
   const learnedRule = [...learnedRules]
@@ -340,8 +387,8 @@ function classification(
     output.review_status = 'Autoaprobada'
   } else if (/ID817004535/.test(description) && amount > 0) {
     Object.assign(output, {
-      income_source: 'Comfacauca', category: 'Ingresos',
-      subcategory: 'Honorarios', merchant: 'Comfacauca',
+      income_source: 'Unicomfacauca', category: 'Ingresos',
+      subcategory: 'Honorarios', merchant: 'Unicomfacauca',
       confidence: 0.99, review_status: 'Autoaprobada',
     })
   } else if (/ID8605127804/.test(description) && amount > 0) {
@@ -440,6 +487,7 @@ async function makeTransaction(
   accountId: string,
   last4: string,
   learnedRules: MerchantRule[],
+  classificationRules: ClassificationRule[],
 ): Promise<Transaction> {
   const accountIdentity = accountId || `${normalize(institution)}:${last4}`
   const key = [
@@ -459,6 +507,7 @@ async function makeTransaction(
     row.description,
     row.amount,
     learnedRules,
+    classificationRules,
   )
   return {
     transaction_id: transactionId,
@@ -502,6 +551,7 @@ async function makeTransaction(
 export async function parseBankStatement(
   file: File,
   learnedRules: MerchantRule[] = [],
+  classificationRules: ClassificationRule[] = [],
 ): Promise<ParsedStatement> {
   const { buffer, lines, text } = await loadPdfLines(file)
   const normalized = normalize(text)
@@ -559,6 +609,7 @@ export async function parseBankStatement(
         accountId,
         last4,
         learnedRules,
+        classificationRules,
       ),
     ),
   )

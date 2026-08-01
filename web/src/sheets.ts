@@ -3,6 +3,7 @@ import type {
   Asset,
   Budget,
   CategoryDefinition,
+  ClassificationRule,
   ConnectionSettings,
   DashboardData,
   EtlRun,
@@ -282,6 +283,29 @@ function normalizeDashboardData(raw: Partial<DashboardData>): DashboardData {
       learned_from: String(row.learned_from || ''),
       notes: String(row.notes || ''),
     })) as MerchantRule[],
+    classificationRules:
+      ((raw.classificationRules || []) as SheetRow[]).map((row) => ({
+        ...row,
+        rule_id: String(row.rule_id || ''),
+        priority: number(row.priority),
+        enabled: row.enabled === '' ? true : boolean(row.enabled),
+        account_ids: String(row.account_ids || ''),
+        description_regex: String(row.description_regex || ''),
+        direction: String(row.direction || ''),
+        amount_equals: row.amount_equals === ''
+          ? undefined
+          : number(row.amount_equals),
+        transaction_type: String(row.transaction_type || ''),
+        income_source: String(row.income_source || ''),
+        category: String(row.category || ''),
+        subcategory: String(row.subcategory || ''),
+        merchant: String(row.merchant || ''),
+        counterparty_account_id: String(row.counterparty_account_id || ''),
+        is_internal_transfer: boolean(row.is_internal_transfer),
+        is_recurring: boolean(row.is_recurring),
+        confidence: number(row.confidence),
+        notes: String(row.notes || ''),
+      })) as ClassificationRule[],
     budgets: ((raw.budgets || []) as SheetRow[]).map((row) => ({
       ...row,
       month: String(row.month || ''),
@@ -389,6 +413,7 @@ const ranges = [
   'Transactions!A1:AI20000',
   'Categories!A1:H2000',
   'Merchant_Rules!A1:N2000',
+  'Rules!A1:Q2000',
   'Budgets!A1:H2000',
   'Subscriptions!A1:M2000',
   'Assets!A1:S2000',
@@ -450,7 +475,8 @@ export async function loadDashboardData(
     valueRanges?: Array<{ values?: unknown[][] }>
   }
   const [
-    transactions, categories, merchantRules, budgets, subscriptions, assets, goals, income, review,
+    transactions, categories, merchantRules, classificationRules, budgets,
+    subscriptions, assets, goals, income, review,
     accounts, etlRuns, taxDocuments,
   ] = (payload.valueRanges || []).map((range) => rowsToObjects(range.values))
 
@@ -458,6 +484,8 @@ export async function loadDashboardData(
     transactions: (transactions || []) as Transaction[],
     categories: (categories || []) as CategoryDefinition[],
     merchantRules: (merchantRules || []) as MerchantRule[],
+    classificationRules:
+      (classificationRules || []) as ClassificationRule[],
     budgets: (budgets || []) as Budget[],
     subscriptions: (subscriptions || []) as Subscription[],
     assets: (assets || []) as Asset[],

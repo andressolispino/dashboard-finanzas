@@ -52,6 +52,7 @@ export const demoData: DashboardData = {
     { category: 'Transferencias entre cuentas', subcategory: 'Cuenta propia', transaction_type: 'Transferencia', budgetable: false, active: true, color: '#0F766E', display_order: 100 },
   ],
   merchantRules: [],
+  classificationRules: [],
   budgets: [
     { month: '2026-07', category: 'Alimentación', subcategory: '', limit_cop: 1100000 },
     { month: '2026-07', category: 'Transporte', subcategory: '', limit_cop: 650000 },

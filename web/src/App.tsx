@@ -43,6 +43,8 @@ const DEFAULT_SPREADSHEET_ID =
   '1_eVay8E1cootlD3Z1mjGHvXmKJzdvx5NAAY3SqsnlvA'
 const DEFAULT_GOOGLE_CLIENT_ID =
   import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
+const REQUIRE_GOOGLE_AUTH =
+  import.meta.env.VITE_REQUIRE_GOOGLE_AUTH === 'true'
 
 const money = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -217,6 +219,15 @@ function merchantLabel(transaction: Transaction) {
   return ''
 }
 
+function incomeSourceLabel(transaction: Transaction) {
+  const source = transaction.income_source ||
+    transaction.merchant ||
+    transaction.raw_description
+  return normalizedText(source) === 'COMFACAUCA'
+    ? 'Unicomfacauca'
+    : source
+}
+
 function aggregate(
   rows: Transaction[],
   selector: (row: Transaction) => string,
@@ -298,6 +309,7 @@ function App() {
   })
 
   useEffect(() => {
+    if (REQUIRE_GOOGLE_AUTH) return
     let active = true
     loadLocalDashboardData().then((snapshot) => {
       if (!active || !snapshot) return
@@ -455,11 +467,7 @@ function App() {
     contextExpenses.filter((transaction) => merchantLabel(transaction)),
     merchantLabel,
   ).slice(0, 8)
-  const incomeSources = aggregate(income, (transaction) =>
-    transaction.income_source ||
-    transaction.merchant ||
-    transaction.raw_description,
-  ).slice(0, 8)
+  const incomeSources = aggregate(income, incomeSourceLabel).slice(0, 8)
 
   const monthly = useMemo(() => {
     const grouped = new Map<string, {
@@ -495,6 +503,24 @@ function App() {
     : selectedMonth.startsWith('year:')
       ? monthly.filter((row) => row.month.startsWith(selectedMonth.slice(5)))
       : monthly.filter((row) => row.month === selectedMonth)
+  const executiveYear = selectedMonth === 'all'
+    ? ''
+    : selectedMonth.startsWith('year:')
+      ? selectedMonth.slice(5)
+      : selectedMonth.slice(0, 4)
+  const executiveMonthly = executiveYear
+    ? monthly.filter((row) => row.month.startsWith(executiveYear))
+    : monthly
+  const executivePeriodLabel = executiveYear
+    ? `Todo ${executiveYear}`
+    : 'Todo el historial'
+  const executiveIncomeSources = aggregate(
+    dimensionFiltered.filter((transaction) =>
+      isIncome(transaction) &&
+      (!executiveYear || normalizedYear(transaction.transaction_date) === executiveYear),
+    ),
+    incomeSourceLabel,
+  ).slice(0, 8)
   const dailyRows = useMemo(() => {
     const grouped = new Map<string, {
       date: string
@@ -1081,7 +1107,11 @@ function App() {
     setImportSummary('')
     try {
       const parsed = await Promise.all(files.map((file) =>
-        parseBankStatement(file, data.merchantRules),
+        parseBankStatement(
+          file,
+          data.merchantRules,
+          data.classificationRules,
+        ),
       ))
       const knownIds = new Set(data.transactions.map((item) =>
         item.transaction_id,
@@ -1238,10 +1268,6 @@ function App() {
     : selectedMonth.startsWith('year:')
       ? `Todo ${selectedMonth.slice(5)}`
       : monthLabel(selectedMonth)
-  const selectedAccountLabel = selectedAccount === 'all'
-    ? 'Familia · sin duplicar el aporte a Laura'
-    : accountOptions.find(([id]) => id === selectedAccount)?.[1] ||
-      selectedAccount
   const recommendations = [
     {
       title: savingsRate >= 0.2
@@ -1276,6 +1302,18 @@ function App() {
         : 'Mantén separada la cuota de vivienda actual para convertirla en ahorro automático cuando termine la deuda.',
     },
   ]
+
+  if (REQUIRE_GOOGLE_AUTH && dataSource !== 'sheets') {
+    return (
+      <GoogleAccessGate
+        settings={settings}
+        loading={loading}
+        error={error}
+        onSettingsChange={setSettings}
+        onConnect={connect}
+      />
+    )
+  }
 
   return (
     <div className="app-shell">
@@ -1509,18 +1547,6 @@ function App() {
 
           {view === 'resumen' && (
             <>
-              <div className="account-policy">
-                <CircleDollarSign size={18} />
-                <div>
-                  <strong>Ingresos: únicamente Davibank</strong>
-                  <span>
-                    Bancolombia 4801 pertenece a Laura y muestra el gasto
-                    familiar. El aporte desde Davibank se excluye en la vista
-                    consolidada para no contar el mismo dinero dos veces.
-                  </span>
-                </div>
-                <b>Cuenta visible: {selectedAccountLabel}</b>
-              </div>
               <div className="period-context">
                 <CalendarDays size={17} />
                 <span>Todos los indicadores principales corresponden a</span>
@@ -1555,6 +1581,31 @@ function App() {
                   icon={Activity}
                   tone="cyan"
                 />
+              </div>
+
+              <Card
+                eyebrow="Serie temporal"
+                title={`Flujo mensual · ${executivePeriodLabel}`}
+                action="Transferencias propias excluidas"
+              >
+                <MonthlyChart data={executiveMonthly} />
+              </Card>
+
+              <div className="dashboard-grid equal executive-support-grid">
+                <Card
+                  eyebrow="Registro histórico completo"
+                  title="Todos los meses disponibles"
+                  action={`${monthly.length} meses`}
+                >
+                  <MonthlyChart data={monthly} />
+                </Card>
+                <Card
+                  eyebrow={`Entradas · ${executivePeriodLabel}`}
+                  title="De dónde viene el dinero"
+                  action={`${executiveIncomeSources.length} fuentes`}
+                >
+                  <RankedList data={executiveIncomeSources} tone="blue" />
+                </Card>
               </div>
 
               <div className="annual-summary">
@@ -1978,7 +2029,7 @@ function App() {
                   <span>Patrimonio neto conocido</span>
                   <strong>{money.format(netWorth)}</strong>
                   <small>
-                    Activos {money.format(grossAssets)} − deuda {money.format(outstandingDebt)}
+                    Activos conocidos {money.format(grossAssets)} − deuda {money.format(outstandingDebt)}
                   </small>
                 </div>
                 <Landmark size={38} />
@@ -2004,8 +2055,15 @@ function App() {
                           <span>
                             {asset.institution
                               ? String(asset.institution)
-                              : `Base ${money.format(asset.principal)}`}
+                              : String(asset.calculation_method || '')
+                                  .includes('Costo de adquisición')
+                                ? `Costo registrado ${money.format(asset.principal)}`
+                                : `Base ${money.format(asset.principal)}`}
                           </span>
+                          {String(asset.calculation_method || '')
+                            .includes('Costo de adquisición') && (
+                            <span>Pendiente actualizar valor comercial</span>
+                          )}
                           {asset.liability_balance > 0 && (
                             <span>
                               Deuda pendiente {money.format(asset.liability_balance)}
@@ -2317,6 +2375,98 @@ function App() {
   )
 }
 
+function GoogleAccessGate({
+  settings,
+  loading,
+  error,
+  onSettingsChange,
+  onConnect,
+}: {
+  settings: ConnectionSettings
+  loading: boolean
+  error: string
+  onSettingsChange: (settings: ConnectionSettings) => void
+  onConnect: () => void
+}) {
+  const needsConfiguration = !settings.clientId || !settings.spreadsheetId
+  return (
+    <main className="auth-shell">
+      <section className="auth-card" aria-labelledby="auth-title">
+        <div className="auth-brand">
+          <span><TrendingUp size={24} /></span>
+          <div>
+            <strong>Finanzas personales</strong>
+            <small>Acceso privado</small>
+          </div>
+        </div>
+
+        <div className="auth-icon"><ShieldCheck size={30} /></div>
+        <span className="auth-eyebrow">Dashboard protegido</span>
+        <h1 id="auth-title">Tus datos reales, solo con tu cuenta de Google</h1>
+        <p>
+          La hoja financiera permanece privada. El dashboard carga la información
+          únicamente después de que Google confirma que tu cuenta tiene acceso.
+        </p>
+
+        <div className="auth-guarantees">
+          <span><CheckCircle2 size={17} /> No se publican movimientos en GitHub</span>
+          <span><CheckCircle2 size={17} /> El acceso vence al cerrar o recargar</span>
+          <span><CheckCircle2 size={17} /> Cuentas sin permiso no pueden ver la hoja</span>
+        </div>
+
+        {needsConfiguration && (
+          <div className="auth-configuration">
+            <span>Configuración inicial</span>
+            <p>Estos dos datos identifican la aplicación y la hoja privada.</p>
+            <label>
+              OAuth Client ID
+              <input
+                value={settings.clientId}
+                onChange={(event) => onSettingsChange({
+                  ...settings,
+                  clientId: event.target.value.trim(),
+                })}
+                placeholder="000000000000-xxxxx.apps.googleusercontent.com"
+                autoComplete="off"
+              />
+            </label>
+            <label>
+              Spreadsheet ID
+              <input
+                value={settings.spreadsheetId}
+                onChange={(event) => onSettingsChange({
+                  ...settings,
+                  spreadsheetId: event.target.value.trim(),
+                })}
+                autoComplete="off"
+              />
+            </label>
+          </div>
+        )}
+
+        {error && (
+          <div className="auth-error" role="alert">
+            <AlertTriangle size={17} /> {error}
+          </div>
+        )}
+
+        <button
+          className="auth-button"
+          onClick={onConnect}
+          disabled={loading}
+        >
+          {loading ? <RefreshCw className="spin" /> : <Link2 />}
+          {loading ? 'Verificando acceso…' : 'Acceder con Google'}
+        </button>
+        <small className="auth-footnote">
+          La contraseña y la verificación en dos pasos se gestionan directamente
+          con Google; este sitio nunca las recibe.
+        </small>
+      </section>
+    </main>
+  )
+}
+
 function KpiCard({
   label,
   value,
@@ -2477,13 +2627,13 @@ function SavingsHistoryChart({
               dataKey="label"
               tickLine={false}
               axisLine={false}
-              tick={{ fill: '#72829a', fontSize: 11 }}
+              tick={{ fill: '#72829a', fontSize: 12 }}
             />
             <YAxis
               tickFormatter={(value) => compactMoney.format(value)}
               tickLine={false}
               axisLine={false}
-              tick={{ fill: '#72829a', fontSize: 10 }}
+              tick={{ fill: '#72829a', fontSize: 11 }}
               width={75}
             />
             <Tooltip
@@ -2696,13 +2846,13 @@ function MonthlyChart({ data }: {
             dataKey="label"
             tickLine={false}
             axisLine={false}
-            tick={{ fill: '#72829a', fontSize: 11 }}
+            tick={{ fill: '#72829a', fontSize: 12 }}
           />
           <YAxis
             tickFormatter={(value) => compactMoney.format(value)}
             tickLine={false}
             axisLine={false}
-            tick={{ fill: '#72829a', fontSize: 10 }}
+            tick={{ fill: '#72829a', fontSize: 11 }}
             width={75}
           />
           <Tooltip
@@ -2759,7 +2909,7 @@ function CategoryChart({ data }: {
             tickFormatter={(value) => compactMoney.format(value)}
             tickLine={false}
             axisLine={false}
-            tick={{ fill: '#72829a', fontSize: 9 }}
+            tick={{ fill: '#72829a', fontSize: 11 }}
           />
           <YAxis
             type="category"
@@ -2767,7 +2917,7 @@ function CategoryChart({ data }: {
             tickLine={false}
             axisLine={false}
             width={112}
-            tick={{ fill: '#4b5d75', fontSize: 10 }}
+            tick={{ fill: '#4b5d75', fontSize: 11 }}
           />
           <Tooltip formatter={(value) => money.format(Number(value))} />
           <Bar dataKey="value" radius={[0, 8, 8, 0]} maxBarSize={18}>
