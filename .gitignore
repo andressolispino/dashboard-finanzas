@@ -17,7 +17,7 @@ config/fixed_expenses.local.json
 data/
 output/
 dry_run*.csv
-index.html
+/index.html
 github-pages-safe/
 
 # Temporales y Python
