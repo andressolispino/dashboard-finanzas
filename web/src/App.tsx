@@ -1113,6 +1113,19 @@ function App() {
           data.classificationRules,
         ),
       ))
+      const importedTransactions = parsed.flatMap((statement) =>
+        statement.transactions,
+      )
+      const latestImportedMonth = importedTransactions
+        .map((transaction) => normalizedMonth(transaction.transaction_date))
+        .filter((month) => /^\d{4}-\d{2}$/.test(month))
+        .sort()
+        .at(-1) || ''
+      const importedAccountIds = [...new Set(
+        importedTransactions
+          .map((transaction) => transaction.account_id)
+          .filter(Boolean),
+      )]
       const knownIds = new Set(data.transactions.map((item) =>
         item.transaction_id,
       ))
@@ -1137,6 +1150,11 @@ function App() {
         ...current,
         transactions: [...current.transactions, ...newRows],
       }))
+      if (latestImportedMonth) setSelectedMonth(latestImportedMonth)
+      setSelectedAccount(
+        importedAccountIds.length === 1 ? importedAccountIds[0] : 'all',
+      )
+      setSelectedCategory('all')
       setLastSync(new Date())
       const institutions = [...new Set(parsed.map((item) => item.institution))]
         .join(', ')
