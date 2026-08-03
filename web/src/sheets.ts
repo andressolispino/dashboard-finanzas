@@ -109,6 +109,41 @@ function rowsToObjects(values: unknown[][] | undefined): SheetRow[] {
     )
 }
 
+function isShiftedDashboardTransaction(row: unknown[]): boolean {
+  const shiftedId = String(row[1] || '').trim()
+  const shiftedAccountId = String(row[4] || '').trim()
+  const dashboardMarker = row.slice(27, 31).some((cell) =>
+    String(cell || '').startsWith('dashboard:'),
+  )
+  return (
+    !String(row[0] || '').trim() &&
+    /^[a-f0-9]{64}$/i.test(shiftedId) &&
+    Boolean(sheetDate(row[2])) &&
+    Boolean(shiftedAccountId) &&
+    dashboardMarker
+  )
+}
+
+export function transactionRowsToObjects(
+  values: unknown[][] | undefined,
+): SheetRow[] {
+  if (!values?.length) return []
+  const [headers, ...rows] = values
+  return rows
+    .filter((row) => row.some((cell) => cell !== '' && cell != null))
+    .map((row) => {
+      // Earlier dashboard imports were appended as B:AJ instead of A:AI.
+      // Realign those persisted rows before applying the live Sheet headers.
+      const cells = isShiftedDashboardTransaction(row) ? row.slice(1) : row
+      return Object.fromEntries(
+        headers.map((header, index) => [
+          String(header),
+          (cells[index] as string | number | boolean | undefined) ?? '',
+        ]),
+      )
+    })
+}
+
 function number(value: unknown): number {
   if (typeof value === 'number') return value
   const parsed = Number(String(value ?? '').replace(/\s/g, '').replace(',', '.'))
@@ -438,7 +473,7 @@ function normalizeDashboardData(raw: Partial<DashboardData>): DashboardData {
 }
 
 const ranges = [
-  'Transactions!A1:AI20000',
+  'Transactions!A1:AJ20000',
   'Categories!A1:H2000',
   'Merchant_Rules!A1:N2000',
   'Rules!A1:Q2000',
@@ -506,7 +541,11 @@ export async function loadDashboardData(
     transactions, categories, merchantRules, classificationRules, budgets,
     subscriptions, assets, goals, income, review,
     accounts, etlRuns, taxDocuments,
-  ] = (payload.valueRanges || []).map((range) => rowsToObjects(range.values))
+  ] = (payload.valueRanges || []).map((range, index) =>
+    index === 0
+      ? transactionRowsToObjects(range.values)
+      : rowsToObjects(range.values),
+  )
 
   return normalizeDashboardData({
     transactions: (transactions || []) as Transaction[],
@@ -724,6 +763,34 @@ async function appendSheetRows(
   }
 }
 
+export function columnName(columnCount: number): string {
+  let current = columnCount
+  let output = ''
+  while (current > 0) {
+    current -= 1
+    output = String.fromCharCode(65 + current % 26) + output
+    current = Math.floor(current / 26)
+  }
+  return output
+}
+
+async function nextTransactionRow(
+  settings: ConnectionSettings,
+  accessToken: string,
+): Promise<number> {
+  const response = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(
+      settings.spreadsheetId,
+    )}/values/${encodeURIComponent('Transactions!A:B')}?majorDimension=ROWS`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!response.ok) {
+    throw new Error('Google Sheets no pudo ubicar la siguiente fila disponible.')
+  }
+  const payload = await response.json() as { values?: unknown[][] }
+  return Math.max(payload.values?.length || 1, 1) + 1
+}
+
 async function appendSheetRow(
   settings: ConnectionSettings,
   accessToken: string,
@@ -759,11 +826,12 @@ export async function appendTransactionsToSheet(
       'La hoja Transactions no tiene las columnas financieras esperadas.',
     )
   }
-  await appendSheetRows(
-    settings,
-    accessToken,
-    'Transactions!A:AI',
-    transactions.map((transaction) =>
+  const firstRow = await nextTransactionRow(settings, accessToken)
+  const lastRow = firstRow + transactions.length - 1
+  const lastColumn = columnName(headers.length)
+  await writeSheetValues(settings, accessToken, [{
+    range: `Transactions!A${firstRow}:${lastColumn}${lastRow}`,
+    values: transactions.map((transaction) =>
       headers.map((header) => {
         if (!header) return ''
         if (header === 'source_parser') {
@@ -774,7 +842,7 @@ export async function appendTransactionsToSheet(
         return transaction[header] ?? ''
       }),
     ),
-  )
+  }])
 }
 
 function escapeRegex(value: string) {
