@@ -163,9 +163,15 @@ function sheetDate(value: unknown): string {
 
 function asTransactions(rows: SheetRow[]): Transaction[] {
   return rows.map((row) => {
+    const sourceParser = String(row.source_parser || '')
     const transaction = {
     ...row,
-    transaction_id: String(row.transaction_id || ''),
+    transaction_id: String(
+      row.transaction_id ||
+      (sourceParser.startsWith('dashboard:')
+        ? sourceParser.slice('dashboard:'.length)
+        : ''),
+    ),
     transaction_date: sheetDate(row.transaction_date),
     account_id: String(row.account_id || ''),
     source_institution: String(row.source_institution || ''),
@@ -208,7 +214,7 @@ function asTransactions(rows: SheetRow[]): Transaction[] {
       }
     }
     return transaction
-  })
+  }).filter((transaction) => Boolean(transaction.transaction_date))
 }
 
 function asReviewGroups(rows: SheetRow[]): ReviewGroup[] {
@@ -727,31 +733,46 @@ async function appendSheetRow(
   await appendSheetRows(settings, accessToken, range, [values])
 }
 
-const transactionSheetHeaders = [
-  'transaction_id', 'transaction_date', 'posted_date', 'account_id',
-  'source_institution', 'source_account_last4', 'raw_description',
-  'normalized_description', 'merchant', 'external_reference',
-  'amount_original', 'original_currency', 'fx_rate_to_cop', 'amount_cop',
-  'direction', 'balance_after_original', 'transaction_type', 'income_source',
-  'category', 'subcategory', 'counterparty_account_id',
-  'is_internal_transfer', 'transfer_pair_id', 'is_recurring',
-  'recurrence_key', 'confidence', 'review_status', 'review_reason',
-  'user_notes', 'source_file_hash', 'source_file_name', 'source_page',
-  'extraction_note', 'imported_at', 'etl_run_id',
-] as const
-
 export async function appendTransactionsToSheet(
   settings: ConnectionSettings,
   accessToken: string,
   transactions: Transaction[],
 ): Promise<void> {
   if (!transactions.length) return
+  const headerResponse = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(
+      settings.spreadsheetId,
+    )}/values/${encodeURIComponent('Transactions!1:1')}?majorDimension=ROWS`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!headerResponse.ok) {
+    throw new Error('Google Sheets no pudo leer las columnas de movimientos.')
+  }
+  const headerPayload = await headerResponse.json() as {
+    values?: unknown[][]
+  }
+  const headers = (headerPayload.values?.[0] || []).map((header) =>
+    String(header || '').trim(),
+  )
+  if (!headers.includes('transaction_date') || !headers.includes('amount_cop')) {
+    throw new Error(
+      'La hoja Transactions no tiene las columnas financieras esperadas.',
+    )
+  }
   await appendSheetRows(
     settings,
     accessToken,
     'Transactions!A:AI',
     transactions.map((transaction) =>
-      transactionSheetHeaders.map((header) => transaction[header] ?? ''),
+      headers.map((header) => {
+        if (!header) return ''
+        if (header === 'source_parser') {
+          return transaction.transaction_id
+            ? `dashboard:${transaction.transaction_id}`
+            : 'dashboard'
+        }
+        return transaction[header] ?? ''
+      }),
     ),
   )
 }
