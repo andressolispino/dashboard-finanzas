@@ -124,6 +124,16 @@ function boolean(value: unknown): boolean {
   )
 }
 
+function isoDateFromParts(year: number, month: number, day: number): string {
+  const date = new Date(Date.UTC(year, month - 1, day))
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) return ''
+  return date.toISOString().slice(0, 10)
+}
+
 function sheetDate(value: unknown): string {
   if (typeof value === 'number' && Number.isFinite(value)) {
     const epoch = Date.UTC(1899, 11, 30)
@@ -136,7 +146,19 @@ function sheetDate(value: unknown): string {
       .toISOString()
       .slice(0, 10)
   }
-  return text.slice(0, 10)
+  const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
+  if (iso) {
+    return isoDateFromParts(Number(iso[1]), Number(iso[2]), Number(iso[3]))
+  }
+  const localized = text.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/)
+  if (localized) {
+    return isoDateFromParts(
+      Number(localized[3]),
+      Number(localized[2]),
+      Number(localized[1]),
+    )
+  }
+  return ''
 }
 
 function asTransactions(rows: SheetRow[]): Transaction[] {
@@ -451,7 +473,7 @@ export async function loadDashboardData(
   const query = new URLSearchParams({
     majorDimension: 'ROWS',
     valueRenderOption: 'UNFORMATTED_VALUE',
-    dateTimeRenderOption: 'FORMATTED_STRING',
+    dateTimeRenderOption: 'SERIAL_NUMBER',
   })
   ranges.forEach((range) => query.append('ranges', range))
   const response = await fetch(
